@@ -30259,12 +30259,12 @@ var require_connection_parameters = __commonJS({
         add(params, this, "fallback_application_name");
         add(params, this, "connect_timeout");
         add(params, this, "options");
-        const ssl = typeof this.ssl === "object" ? this.ssl : this.ssl ? { sslmode: this.ssl } : {};
-        add(params, ssl, "sslmode");
-        add(params, ssl, "sslca");
-        add(params, ssl, "sslkey");
-        add(params, ssl, "sslcert");
-        add(params, ssl, "sslrootcert");
+        const ssl2 = typeof this.ssl === "object" ? this.ssl : this.ssl ? { sslmode: this.ssl } : {};
+        add(params, ssl2, "sslmode");
+        add(params, ssl2, "sslca");
+        add(params, ssl2, "sslkey");
+        add(params, ssl2, "sslcert");
+        add(params, ssl2, "sslrootcert");
         if (this.database) {
           params.push("dbname=" + quoteParamValue(this.database));
         }
@@ -31459,7 +31459,7 @@ var require_stream = __commonJS({
       getSecureStream
     };
     function getNodejsStreamFuncs() {
-      function getStream2(ssl) {
+      function getStream2(ssl2) {
         const net = __require("net");
         return new net.Socket();
       }
@@ -31473,9 +31473,9 @@ var require_stream = __commonJS({
       };
     }
     function getCloudflareStreamFuncs() {
-      function getStream2(ssl) {
+      function getStream2(ssl2) {
         const { CloudflareSocket } = require_empty();
-        return new CloudflareSocket(ssl);
+        return new CloudflareSocket(ssl2);
       }
       function getSecureStream2(options) {
         options.socket.startTls(options);
@@ -60119,16 +60119,16 @@ var motoboyLocationsTable = pgTable("motoboy_locations", {
 // ../../lib/db/src/index.ts
 var { Pool: Pool3 } = esm_default;
 var connectionString = process.env.DATABASE_URL;
-if (!connectionString) {
+var pgHost = process.env.PGHOST;
+if (!connectionString && !pgHost) {
   throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?"
+    "Configure o banco: defina DATABASE_URL ou as vari\xE1veis PGHOST/PGPORT/PGUSER/PGPASSWORD/PGDATABASE."
   );
 }
-var isLocalDb = /@(localhost|127\.0\.0\.1|\[::1\]|db):/i.test(connectionString);
-var pool = new Pool3({
-  connectionString,
-  ssl: isLocalDb ? void 0 : { rejectUnauthorized: false }
-});
+var hostForCheck = connectionString ?? `@${pgHost ?? ""}:`;
+var isLocalDb = /@(localhost|127\.0\.0\.1|\[::1\]|db):/i.test(hostForCheck) || /^(localhost|127\.0\.0\.1|\[::1\]|db)$/i.test(pgHost ?? "");
+var ssl = isLocalDb ? void 0 : { rejectUnauthorized: false };
+var pool = connectionString ? new Pool3({ connectionString, ssl }) : new Pool3({ ssl });
 var db = drizzle(pool, { schema: schema_exports });
 
 // src/routes/health.ts
