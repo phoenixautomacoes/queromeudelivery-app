@@ -41532,6 +41532,17 @@ var AdminLoginResponse = objectType({
   token: stringType()
 });
 
+// src/routes/health.ts
+var router = (0, import_express.Router)();
+router.get("/healthz", (_req, res) => {
+  const data = HealthCheckResponse.parse({ status: "ok" });
+  res.json(data);
+});
+var health_default = router;
+
+// src/routes/store.ts
+var import_express2 = __toESM(require_express2(), 1);
+
 // ../../node_modules/.pnpm/pg@8.20.0/node_modules/pg/esm/index.mjs
 var import_lib = __toESM(require_lib5(), 1);
 var Client = import_lib.default.Client;
@@ -60131,52 +60142,7 @@ var ssl = isLocalDb ? void 0 : { rejectUnauthorized: false };
 var pool = connectionString ? new Pool3({ connectionString, ssl }) : new Pool3({ ssl });
 var db = drizzle(pool, { schema: schema_exports });
 
-// src/routes/health.ts
-var router = (0, import_express.Router)();
-router.get("/healthz", (_req, res) => {
-  const data = HealthCheckResponse.parse({ status: "ok" });
-  res.json(data);
-});
-router.get("/dbcheck", async (_req, res) => {
-  const url2 = process.env["DATABASE_URL"] ?? "";
-  const host = url2.replace(/^.*@/, "").split("/")[0] || "(sem DATABASE_URL)";
-  const start = Date.now();
-  let parsed = {};
-  try {
-    const m = url2.match(/^postgres(?:ql)?:\/\/([^:]+):([^@]*)@([^/]+)/);
-    if (m) {
-      parsed = {
-        user: m[1],
-        passwordLen: m[2].length,
-        passwordHasPercent: m[2].includes("%"),
-        passwordHasAt: m[2].includes("@"),
-        hostPort: m[3]
-      };
-    } else {
-      parsed = { note: "n\xE3o casou com o padr\xE3o esperado", rawLen: url2.length };
-    }
-  } catch {
-    parsed = { note: "erro ao parsear" };
-  }
-  try {
-    const r = await pool.query("select 1 as ok");
-    res.json({ ok: true, host, parsed, ms: Date.now() - start, result: r.rows[0] });
-  } catch (err) {
-    const e = err;
-    res.status(500).json({
-      ok: false,
-      host,
-      parsed,
-      ms: Date.now() - start,
-      code: e.code ?? null,
-      message: e.message ?? String(err)
-    });
-  }
-});
-var health_default = router;
-
 // src/routes/store.ts
-var import_express2 = __toESM(require_express2(), 1);
 var router2 = (0, import_express2.Router)();
 router2.get("/store", async (req, res) => {
   try {
